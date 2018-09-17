@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "8ee526df-0fba-4880-a0d5-e978b00a9797",
+		"_postman_id": "b1629ac1-a699-47a0-9970-8c2295eb40c1",
 		"name": "mod-gobi",
 		"description": "Tests for mod-gobi",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
@@ -164,7 +164,10 @@
 								"disabled": true
 							}
 						],
-						"body": {},
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/validate",
 							"protocol": "{{protocol}}",
@@ -181,23 +184,51 @@
 					"response": []
 				},
 				{
-					"name": "/order - ListedElectronicMonograph",
+					"name": "/gobi/orders (listed print monograph)",
 					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "f07624dc-c22d-4952-8d93-b85401f7458c",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_listed_print_monograph.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_listed_print_monograph\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
 						{
 							"listen": "test",
 							"script": {
-								"id": "969f0328-aa57-43a4-9bb9-ba008d15e635",
+								"id": "85d36fe8-71fe-4b6b-9f1e-32cef766ef90",
 								"type": "text/javascript",
 								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
 									"pm.test(\"Status code is 201\", function () {",
 									"    pm.response.to.have.status(201);",
-									"    pm.expect(postman.getResponseHeader(\"Content-Type\")).to.equal(\"application/xml\")",
 									"});",
 									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
 									"",
-									"pm.test(\"A PO number is returned in the response\", function(){",
-									"    pm.expect(pm.response.text()).to.include(\"PoLineNumber\")",
-									"})"
+									"pm.test(\"PoLineNumber is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('PoLineNumber');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is valid\", function() {",
+									"    let polNumber = jsonData.Response.PoLineNumber;",
+									"    pm.expect(new RegExp('^[a-zA-Z0-9]{5,16}-[0-9]{1,3}$').test(polNumber)).to.be.true;",
+									"});"
 								]
 							}
 						}
@@ -206,21 +237,446 @@
 						"method": "POST",
 						"header": [
 							{
-								"key": "Content-Type",
-								"value": "application/xml"
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
 							},
 							{
 								"key": "x-okapi-token",
 								"value": "{{xokapitoken}}"
 							},
 							{
-								"key": "x-okapi-tenant",
-								"value": "{{xokapitenant}}"
+								"key": "Content-Type",
+								"value": "application/xml"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "<PurchaseOrder>\n  <CustomerDetail>\n    <BaseAccount>5095</BaseAccount>\n    <SubAccount>509596</SubAccount>\n  </CustomerDetail>\n  <Order>\n    <ListedElectronicMonograph>\n      <collection>\n        <record>\n          <leader>00585nam  22001813  4500</leader>\n          <controlfield tag=\"001\"></controlfield>\n          <controlfield tag=\"003\">NhCcYBP</controlfield>\n          <controlfield tag=\"005\">20150813163447.0</controlfield>\n          <controlfield tag=\"006\">m||||||||d||||||||</controlfield>\n          <controlfield tag=\"007\">cr||||||||||||</controlfield>\n          <controlfield tag=\"008\">150813q2012    xx |||||o|||||||| | eng d</controlfield>\n          <datafield tag=\"020\" ind1=\" \" ind2=\" \">\n            <subfield code=\"a\">9780817913465 (electronic bk.)</subfield>\n          </datafield>\n          <datafield tag=\"035\" ind1=\" \" ind2=\" \">\n            <subfield code=\"a\">(OCoLC)808344423</subfield>\n          </datafield>\n          <datafield tag=\"040\" ind1=\" \" ind2=\" \">\n            <subfield code=\"a\">NhCcYBP</subfield>\n            <subfield code=\"c\">NhCcYBP</subfield>\n          </datafield>\n          <datafield tag=\"100\" ind1=\" \" ind2=\" \">\n            <subfield code=\"a\">ANDERSON, KENNETH, 1956-</subfield>\n          </datafield>\n          <datafield tag=\"245\" ind1=\"0\" ind2=\"0\">\n            <subfield code=\"a\">LIVING WITH THE UN</subfield>\n            <subfield code=\"h\">[electronic resource] :</subfield>\n            <subfield code=\"b\">AMERICAN RESPONSIBILITIES AND INTERNATIONAL ORDER.</subfield>\n          </datafield>\n          <datafield tag=\"260\" ind1=\" \" ind2=\" \">\n            <subfield code=\"a\">STANFORD :</subfield>\n            <subfield code=\"b\">HOOVER INSTITUTION PRESS,</subfield>\n            <subfield code=\"c\">2012.</subfield>\n          </datafield>\n          <datafield tag=\"490\" ind1=\"0\" ind2=\" \">\n            <subfield code=\"a\">HOOVER INSTITUTION PRESS PUBLICATION.</subfield>\n            <subfield code=\"v\">609</subfield>\n          </datafield>\n        </record>\n      </collection>\n      <OrderDetail>\n        <BatchPONumber />\n        <ItemPONumber>.o22310460</ItemPONumber>\n        <FundCode>xnath</FundCode>\n        <MappedFundCode />\n        <OrderNotes />\n        <OtherLocalId>.o22310460</OtherLocalId>\n        <Location>NATH</Location>\n        <Quantity>1</Quantity>\n        <YBPOrderKey>99952919209</YBPOrderKey>\n        <OrderPlaced>2013-03-20T14:35:35</OrderPlaced>\n        <ListPrice>\n          <Amount>14.95</Amount>\n          <Currency>USD</Currency>\n        </ListPrice>\n        <PurchaseOption>\n          <VendorPOCode>EBRSU</VendorPOCode>\n          <Code>SU</Code>\n          <Description>Gobi</Description>\n          <VendorCode>GOBI</VendorCode>\n        </PurchaseOption>\n      </OrderDetail>\n    </ListedElectronicMonograph>\n  </Order>\n</PurchaseOrder>"
+							"raw": "{{po_listed_print_monograph}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders (listed electronic monograph)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ba67fd6b-2941-4f3d-a167-c4154a58e13d",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_listed_electronic_monograph.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_listed_electronic_monograph\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "fdb8eea7-15e1-4b4e-921b-b645972bffe5",
+								"type": "text/javascript",
+								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('PoLineNumber');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is valid\", function() {",
+									"    let polNumber = jsonData.Response.PoLineNumber;",
+									"    pm.expect(new RegExp('^[a-zA-Z0-9]{5,16}-[0-9]{1,3}$').test(polNumber)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "x-okapi-token",
+								"value": "{{xokapitoken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_listed_electronic_monograph}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders (listed print serial)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "97bf73f4-bcfb-4f68-8b67-c65ffc12120c",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_listed_print_serial.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_listed_print_serial\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "2ce0cff0-60aa-4941-b876-854cc9456c97",
+								"type": "text/javascript",
+								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('PoLineNumber');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is valid\", function() {",
+									"    let polNumber = jsonData.Response.PoLineNumber;",
+									"    pm.expect(new RegExp('^[a-zA-Z0-9]{5,16}-[0-9]{1,3}$').test(polNumber)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "x-okapi-token",
+								"value": "{{xokapitoken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_listed_print_serial}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders (listed electronic serial)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "4951c45a-52cc-47b3-b1d0-d5267dd1c1b2",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_listed_electronic_serial.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_listed_electronic_serial\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "eb8d424d-e53e-46a0-bc72-75d5aabcdd65",
+								"type": "text/javascript",
+								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('PoLineNumber');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is valid\", function() {",
+									"    let polNumber = jsonData.Response.PoLineNumber;",
+									"    pm.expect(new RegExp('^[a-zA-Z0-9]{5,16}-[0-9]{1,3}$').test(polNumber)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "x-okapi-token",
+								"value": "{{xokapitoken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_listed_electronic_serial}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders (unlisted print monograph)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "d4d0c278-0d94-4672-a0ff-404ec22de58e",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_unlisted_print_monograph.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_unlisted_print_monograph\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "3a5cc5c1-f90f-4a64-90d7-b6e9b7e6dd98",
+								"type": "text/javascript",
+								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('PoLineNumber');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is valid\", function() {",
+									"    let polNumber = jsonData.Response.PoLineNumber;",
+									"    pm.expect(new RegExp('^[a-zA-Z0-9]{5,16}-[0-9]{1,3}$').test(polNumber)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "x-okapi-token",
+								"value": "{{xokapitoken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_unlisted_print_monograph}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders (unlisted print serial)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ad293aeb-90c0-4785-ba61-05f0f2b81556",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_unlisted_print_serial.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_unlisted_print_serial\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "ad69215a-c9b8-49b5-8f40-bdbcff98c8ea",
+								"type": "text/javascript",
+								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
+									"pm.test(\"Status code is 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('PoLineNumber');",
+									"});",
+									"",
+									"pm.test(\"PoLineNumber is valid\", function() {",
+									"    let polNumber = jsonData.Response.PoLineNumber;",
+									"    pm.expect(new RegExp('^[a-zA-Z0-9]{5,16}-[0-9]{1,3}$').test(polNumber)).to.be.true;",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "x-okapi-token",
+								"value": "{{xokapitoken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_unlisted_print_serial}}"
 						},
 						"url": {
 							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
@@ -275,7 +731,10 @@
 								"value": "application/json"
 							}
 						],
-						"body": {},
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/validate",
 							"protocol": "{{protocol}}",
@@ -321,7 +780,10 @@
 								"value": "application/json"
 							}
 						],
-						"body": {},
+						"body": {
+							"mode": "raw",
+							"raw": ""
+						},
 						"url": {
 							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/validate",
 							"protocol": "{{protocol}}",
@@ -332,6 +794,155 @@
 							"path": [
 								"gobi",
 								"validate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders (bad data)",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "ac0fafac-c88b-45ac-9664-3deaf5a5b3b4",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_listed_electronic_monograph_bad_data.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_listed_electronic_monograph_bad_data\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "6dfc9c54-13d6-4415-9c5a-fd3209c02b5c",
+								"type": "text/javascript",
+								"exec": [
+									"let jsonData = xml2Json(responseBody);",
+									"console.log(jsonData);",
+									"",
+									"pm.test(\"Status code is 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});",
+									"",
+									"pm.test(\"Is XML\", function () {",
+									"    pm.expect(postman.getResponseHeader('Content-Type')).to.equal('application/xml');",
+									"});",
+									"",
+									"pm.test(\"Error XML is returned\", function() {",
+									"    pm.expect(jsonData.Response).to.have.property('Error');",
+									"    pm.expect(jsonData.Response.Error).to.have.property('Code', 'INVALID_XML');",
+									"    pm.expect(jsonData.Response.Error).to.have.property('Message');",
+									"});"
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "x-okapi-token",
+								"value": "{{xokapitoken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_listed_electronic_monograph_bad_data}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "/gobi/orders - with no Okapi token",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"id": "81ca7881-c4c6-4c35-8d27-009082f8a66a",
+								"type": "text/javascript",
+								"exec": [
+									"pm.sendRequest({",
+									"        url: pm.variables.get(\"testdataBaseURL\") + \"/po_listed_print_monograph.xml\",",
+									"        method: \"GET\"",
+									"    },",
+									"    function (err, res) {",
+									"        pm.globals.set(\"po_listed_print_monograph\", res.text());     ",
+									"    }",
+									");",
+									"        "
+								]
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"id": "745213f3-d4b6-41bc-8fcc-41e67da9981f",
+								"type": "text/javascript",
+								"exec": [
+									"pm.test(\"Calling gobi/orders without a token\", function () {",
+									"    pm.response.to.have.status(403);",
+									"    pm.expect(pm.response.text()).to.equal(\"Access requires permission: gobi.item.post\");",
+									"});",
+									""
+								]
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "x-okapi-tenant",
+								"value": "{{xokapitenant}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/xml"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{{po_listed_print_monograph}}"
+						},
+						"url": {
+							"raw": "{{protocol}}://{{url}}:{{okapiport}}/gobi/orders",
+							"protocol": "{{protocol}}",
+							"host": [
+								"{{url}}"
+							],
+							"port": "{{okapiport}}",
+							"path": [
+								"gobi",
+								"orders"
 							]
 						}
 					},
@@ -380,10 +991,7 @@
 								"value": "{{xokapitoken}}"
 							}
 						],
-						"body": {
-							"mode": "raw",
-							"raw": ""
-						},
+						"body": {},
 						"url": {
 							"raw": "{{protocol}}://{{url}}:{{okapiport}}/vendor/{{vendorId}}",
 							"protocol": "{{protocol}}",
@@ -426,7 +1034,7 @@
 	],
 	"variable": [
 		{
-			"id": "c131b70b-8772-48fb-9726-3741fecc4b92",
+			"id": "dddda1c0-b603-4fdf-8da1-b202af33d808",
 			"key": "testdataBaseURL",
 			"value": "https://raw.githubusercontent.com/folio-org/mod-gobi/master/src/test/resources/GOBIIntegrationServiceResourceImpl/",
 			"type": "string"
